@@ -8,10 +8,12 @@ class RspecActiveModelBase
   extend ActiveModel::Naming
   extend ActiveModel::Callbacks
 
+  include SimpleSlug::ModelAddition
+
   define_model_callbacks :validation, :destroy
 
   attr_reader :attributes
-  attr_accessor :id, :created_at
+  attr_accessor :id, :slug, :created_at
 
   def initialize(attributes = {})
     @attributes = attributes
@@ -23,6 +25,12 @@ class RspecActiveModelBase
 
   def persisted?
     true
+  end
+
+  def self.create(attributes, *)
+    record = new(attributes)
+    record.save
+    record
   end
 
   def save
