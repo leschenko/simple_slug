@@ -1,31 +1,21 @@
-require 'active_model'
+require 'active_record'
 require 'i18n'
 require 'active_support/core_ext'
 require 'simple_slug'
 
+# just silence warning
+I18n.enforce_available_locales = false
+
 class RspecActiveModelBase
+  include ActiveModel::Model
   include ActiveModel::AttributeMethods
-  extend ActiveModel::Naming
   extend ActiveModel::Callbacks
 
   include SimpleSlug::ModelAddition
 
-  define_model_callbacks :validation, :destroy
+  define_model_callbacks :validation, :save, :destroy
 
-  attr_reader :attributes
-  attr_accessor :id, :slug, :created_at
-
-  def initialize(attributes = {})
-    @attributes = attributes
-  end
-
-  def method_missing(id, *)
-    attributes[id.to_sym] || attributes[id.to_s] || super
-  end
-
-  def persisted?
-    true
-  end
+  attr_accessor :id, :slug, :name, :created_at
 
   def self.create(attributes, *)
     record = new(attributes)
@@ -34,11 +24,15 @@ class RspecActiveModelBase
   end
 
   def save
-    run_callbacks(:validation) {}
+    run_callbacks(:validation) { run_callbacks(:save) { } }
   end
 
   def destroy
     run_callbacks(:destroy) { @destroyed = true }
+  end
+
+  def persisted?
+    true
   end
 
   def destroyed?
