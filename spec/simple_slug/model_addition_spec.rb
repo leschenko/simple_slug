@@ -18,4 +18,21 @@ describe SimpleSlug do
       SlugGenerationRspecModel.create(id: 1).to_param.should == '1'
     end
   end
+
+  describe '#friendly_find' do
+    it '#find if integer like' do
+      SlugGenerationRspecModel.should_receive(:find).with(1)
+      SlugGenerationRspecModel.friendly_find(1)
+    end
+
+    it '#find if numeric string' do
+      SlugGenerationRspecModel.should_receive(:find).with('1')
+      SlugGenerationRspecModel.friendly_find('1')
+    end
+
+    it '#find if numeric string' do
+      SlugGenerationRspecModel.should_receive(:find_by).with('slug' => 'title')
+      SlugGenerationRspecModel.friendly_find('title')
+    end
+  end
 end

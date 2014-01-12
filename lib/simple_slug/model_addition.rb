@@ -22,7 +22,14 @@ module SimpleSlug
     end
 
     module ClassMethods
-
+      def friendly_find(id_param)
+        return unless id_param
+        if id_param.is_a?(Integer) || id_param =~ /\A\d+\z/
+          find(id_param)
+        else
+          find_by(simple_slug_options[:slug_column] => id_param)
+        end
+      end
     end
 
     module InstanceMethods
