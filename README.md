@@ -1,6 +1,6 @@
 # SimpleSlug
 
-TODO: Write a gem description
+This is not a "bulldozer. This is just friendly id generator fo ActiveRecord.
 
 ## Installation
 
@@ -18,7 +18,21 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Add basic slugs to your model:
+
+```ruby
+class User < ActiveRecord::Base
+  simple_slug :full_name
+end
+```
+
+Or with custom slug column and history:
+
+```ruby
+class User < ActiveRecord::Base
+  simple_slug :full_name, slug_column: 'my_slug_column', history: true
+end
+```
 
 ## Contributing
 
