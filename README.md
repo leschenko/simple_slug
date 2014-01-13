@@ -1,5 +1,8 @@
 # SimpleSlug
 
+[![Build Status](https://travis-ci.org/leschenko/simple_slug.png?branch=master)](https://travis-ci.org/leschenko/simple_slug)
+[![Dependency Status](https://gemnasium.com/leschenko/simple_slug.png)](https://gemnasium.com/leschenko/simple_slug)
+
 This is not a "bulldozer", this is just friendly id generator for ActiveRecord.
 
 ## Installation
