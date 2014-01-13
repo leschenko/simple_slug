@@ -5,8 +5,23 @@ class SlugGenerationRspecModel < RspecActiveModelBase
 end
 
 describe SimpleSlug do
-  it 'generate slug after save' do
-    SlugGenerationRspecModel.create(name: 'Hello').slug.should == 'hello'
+  describe 'slug generation' do
+    it 'after save' do
+      SlugGenerationRspecModel.create(name: 'Hello').slug.should == 'hello'
+    end
+
+    it 'skip excludes' do
+      SlugGenerationRspecModel.create(name: 'new').should_not be_valid
+    end
+
+    it 'skip integers' do
+      SlugGenerationRspecModel.create(name: '123').should_not be_valid
+    end
+
+    it 'resolve conflicts' do
+      SlugGenerationRspecModel.create(name: 'hi')
+      SlugGenerationRspecModel.create(name: 'hi').slug.should =~ /hi--\d+/
+    end
   end
 
   describe '#to_param' do

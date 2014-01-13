@@ -14,6 +14,10 @@ module SimpleSlug
         extend ClassMethods
 
         after_validation :simple_slug_generate
+        validates simple_slug_options[:slug_column],
+                  presence: true,
+                  exclusion: {in: SimpleSlug.excludes},
+                  format: {without: SimpleSlug.exclude_regexp,}
         if simple_slug_options[:history]
           after_save :simple_slug_create_history_slug
           after_destroy :simple_slug_cleanup_history
@@ -22,7 +26,7 @@ module SimpleSlug
     end
 
     module ClassMethods
-      def friendly_find(id_param)
+      def simple_slug_find(id_param)
         return unless id_param
         if id_param.is_a?(Integer) || id_param =~ /\A\d+\z/
           find(id_param)
@@ -30,6 +34,8 @@ module SimpleSlug
           find_by(simple_slug_options[:slug_column] => id_param)
         end
       end
+
+      alias_method :friendly_find, :simple_slug_find
     end
 
     module InstanceMethods
@@ -38,7 +44,9 @@ module SimpleSlug
       end
 
       def simple_slug_generate
-        send "#{simple_slug_options[:slug_column]}=", simple_slug_slugify(simple_slug_base)
+        simple_slug = simple_slug_slugify(simple_slug_base)
+        resolved_simple_slug = simple_slug_resolve(simple_slug)
+        send "#{simple_slug_options[:slug_column]}=", resolved_simple_slug
       end
 
       def simple_slug_base
@@ -47,6 +55,34 @@ module SimpleSlug
 
       def simple_slug_slugify(base)
         I18n.transliterate(base).parameterize('-').downcase
+      end
+
+      def simple_slug_resolve(slug_value)
+        if simple_slug_exists?(slug_value)
+          loop do
+            slug_value_with_suffix = simple_slug_next(slug_value)
+            break slug_value_with_suffix unless simple_slug_exists?(slug_value)
+          end
+        else
+          slug_value
+        end
+      end
+
+      def simple_slug_next(slug_value)
+        "#{slug_value}--#{rand(99999)}"
+      end
+
+      def simple_slug_exists?(slug_value)
+        simple_slug_base_exists?(slug_value) || simple_slug_history_exists?(slug_value)
+      end
+
+      def simple_slug_base_exists?(slug_value)
+        self.class.exists?(simple_slug_options[:slug_column] => slug_value)
+      end
+
+      def simple_slug_history_exists?(slug_value)
+        return false unless simple_slug_options[:history]
+        ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, slug: slug_value).exists?
       end
 
       def simple_slug_cleanup_history

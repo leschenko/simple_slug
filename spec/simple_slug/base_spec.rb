@@ -11,7 +11,7 @@ describe SimpleSlug do
     end
 
     it 'exclude regexps' do
-      SimpleSlug.exclude_regexps.should include(/\A\d+\z/)
+      SimpleSlug.exclude_regexp.should == /\A\d+\z/
     end
   end
 end

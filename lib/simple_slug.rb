@@ -9,8 +9,8 @@ module SimpleSlug
   mattr_accessor :excludes
   @@excludes = %w(new edit index session login logout sign_in sign_out users admin stylesheets assets javascripts images)
 
-  mattr_accessor :exclude_regexps
-  @@exclude_regexps = [/\A\d+\z/]
+  mattr_accessor :exclude_regexp
+  @@exclude_regexp = /\A\d+\z/
 
   mattr_accessor :slug_column
   @@slug_column = 'slug'
