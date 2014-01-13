@@ -80,7 +80,7 @@ module SimpleSlug
       end
 
       def simple_slug_base_exists?(slug_value)
-        base_scope = self.class.where(simple_slug_options[:slug_column] => slug_value)
+        base_scope = self.class.unscoped.where(simple_slug_options[:slug_column] => slug_value)
         base_scope = base_scope.where('id != ?', id) if persisted?
         base_scope.exists?
       end
@@ -88,7 +88,7 @@ module SimpleSlug
       def simple_slug_history_exists?(slug_value)
         return false unless simple_slug_options[:history]
         base_scope = ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, slug: slug_value)
-        base_scope = base_scope.where('id != ?', id) if persisted?
+        base_scope = base_scope.where('sluggable_id != ?', id) if persisted?
         base_scope.exists?
       end
     end
