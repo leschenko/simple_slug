@@ -12,9 +12,9 @@ describe 'slug history' do
 
     it 'create' do
       relation = double
-      ::SimpleSlug::HistorySlug.should_receive(:where).with(sluggable_type: 'SlugHistoryRspecModel', sluggable_id: nil).and_return(relation)
+      ::SimpleSlug::HistorySlug.should_receive(:where).once.ordered.with(sluggable_type: 'SlugHistoryRspecModel', sluggable_id: 1, slug: 'hello').and_return(relation)
       relation.should_receive(:first_or_create)
-      SlugHistoryRspecModel.create(name: 'Hello')
+      SlugHistoryRspecModel.create(id: 1, name: 'Hello')
     end
 
     it 'cleanup' do

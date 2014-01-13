@@ -13,11 +13,11 @@ module SimpleSlug
         include InstanceMethods
         extend ClassMethods
 
-        after_validation :simple_slug_generate
+        before_validation :simple_slug_generate
         validates simple_slug_options[:slug_column],
                   presence: true,
                   exclusion: {in: SimpleSlug.excludes},
-                  format: {without: SimpleSlug.exclude_regexp,}
+                  format: {without: SimpleSlug.exclude_regexp}
         if simple_slug_options[:history]
           after_save :simple_slug_create_history_slug
           after_destroy :simple_slug_cleanup_history
@@ -99,7 +99,7 @@ module SimpleSlug
       end
 
       def simple_slug_create_history_slug
-        ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, sluggable_id: id).first_or_create { |r| r.slug = slug }
+        ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, sluggable_id: id, slug: send(simple_slug_options[:slug_column])).first_or_create
       end
     end
 
