@@ -51,7 +51,7 @@ module SimpleSlug
 
       def simple_slug_generate
         simple_slug = simple_slug_normalize(simple_slug_base)
-        return true if simple_slug == send(simple_slug_options[:slug_column])
+        return true if simple_slug == send(simple_slug_options[:slug_column]).to_s.sub(/--\d+\z/, '')
         resolved_simple_slug = simple_slug_resolve(simple_slug)
         send "#{simple_slug_options[:slug_column]}=", resolved_simple_slug
       end
