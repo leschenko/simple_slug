@@ -13,7 +13,7 @@ module SimpleSlug
         include InstanceMethods
         extend ClassMethods
 
-        before_validation :simple_slug_generate
+        before_validation :simple_slug_generate, if: :should_generate_new_slug?
         validates simple_slug_options[:slug_column],
                   presence: true,
                   exclusion: {in: SimpleSlug.excludes},
@@ -45,8 +45,13 @@ module SimpleSlug
         send(simple_slug_options[:slug_column]).presence || super
       end
 
+      def should_generate_new_slug?
+        send(simple_slug_options[:slug_column]).blank? || simple_slug_options[:history]
+      end
+
       def simple_slug_generate
         simple_slug = simple_slug_normalize(simple_slug_base)
+        return true if simple_slug == send(simple_slug_options[:slug_column])
         resolved_simple_slug = simple_slug_resolve(simple_slug)
         send "#{simple_slug_options[:slug_column]}=", resolved_simple_slug
       end

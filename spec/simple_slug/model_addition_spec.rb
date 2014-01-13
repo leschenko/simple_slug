@@ -21,6 +21,11 @@ describe SimpleSlug::ModelAddition do
     it 'skip integers' do
       SlugGenerationRspecModel.new(name: '123').should_not be_valid
     end
+
+    it 'skip slug generation' do
+      SlugGenerationRspecModel.any_instance.stub(:should_generate_new_slug?).and_return(false)
+      SlugGenerationRspecModel.create(name: 'Hello').slug.should be_blank
+    end
   end
 
   describe 'resolve conflicts' do
