@@ -21,6 +21,7 @@ module SimpleSlug
         if simple_slug_options[:history]
           after_save :simple_slug_create_history_slug
           after_destroy :simple_slug_cleanup_history
+          include InstanceHistoryMethods
         end
       end
     end
@@ -90,7 +91,9 @@ module SimpleSlug
         base_scope = base_scope.where('id != ?', id) if persisted?
         base_scope.exists?
       end
+    end
 
+    module InstanceHistoryMethods
       def simple_slug_cleanup_history
         ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, sluggable_id: id).delete_all
       end
