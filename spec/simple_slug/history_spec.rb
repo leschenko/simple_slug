@@ -28,13 +28,25 @@ describe 'slug history' do
 
   describe 'conflicts' do
     it 'history slug exists' do
-      pending
+      record = SlugGenerationRspecModel.new(name: 'Hi')
+      record.stub(:simple_slug_base_exists?).and_return(false)
+      record.should_receive(:simple_slug_history_exists?).once.ordered.and_return(true)
+      record.should_receive(:simple_slug_history_exists?).once.ordered.and_return(false)
+      record.save
+      record.slug.should start_with('hi--')
     end
   end
 
   describe '#friendly_find' do
+    before do
+      SlugHistoryRspecModel.stub(:find_by)
+    end
+
     it 'find from history' do
-      pending
+      record = double('history')
+      record.stub(:sluggable).and_return(double('record'))
+      ::SimpleSlug::HistorySlug.should_receive(:find_by!).with(slug: 'title').and_return(record)
+      SlugHistoryRspecModel.friendly_find('title')
     end
   end
 
