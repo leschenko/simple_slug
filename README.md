@@ -1,6 +1,6 @@
 # SimpleSlug
 
-This is not a "bulldozer. This is just friendly id generator fo ActiveRecord.
+This is not a "bulldozer", this is just friendly id generator for ActiveRecord.
 
 ## Installation
 
