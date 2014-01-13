@@ -34,6 +34,18 @@ class User < ActiveRecord::Base
 end
 ```
 
+If you want to control when slug is generated, define `should_generate_new_slug?` method:
+
+```ruby
+class User < ActiveRecord::Base
+  simple_slug :full_name
+
+  def should_generate_new_slug?
+    true
+  end
+end
+```
+
 ## Contributing
 
 1. Fork it ( http://github.com/<my-github-username>/simple_slug/fork )
