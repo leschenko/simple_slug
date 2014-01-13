@@ -4,27 +4,47 @@ class SlugGenerationRspecModel < RspecActiveModelBase
   simple_slug :name
 end
 
-describe SimpleSlug do
+describe SimpleSlug::ModelAddition do
   describe 'slug generation' do
+    before do
+      SlugGenerationRspecModel.any_instance.stub(:simple_slug_exists?).and_return(false)
+    end
+
     it 'after save' do
       SlugGenerationRspecModel.create(name: 'Hello').slug.should == 'hello'
     end
 
     it 'skip excludes' do
-      SlugGenerationRspecModel.create(name: 'new').should_not be_valid
+      SlugGenerationRspecModel.new(name: 'new').should_not be_valid
     end
 
     it 'skip integers' do
-      SlugGenerationRspecModel.create(name: '123').should_not be_valid
+      SlugGenerationRspecModel.new(name: '123').should_not be_valid
+    end
+  end
+
+  describe 'resolve conflicts' do
+    it 'duplicate slug' do
+      record = SlugGenerationRspecModel.new(name: 'Hi')
+      record.should_receive(:simple_slug_exists?).once.ordered.with('hi').and_return(true)
+      record.should_receive(:simple_slug_exists?).once.ordered.with(/hi--\d+/).and_return(false)
+      record.save
+      record.slug.should start_with('hi--')
     end
 
-    it 'resolve conflicts' do
-      SlugGenerationRspecModel.create(name: 'hi')
-      SlugGenerationRspecModel.create(name: 'hi').slug.should =~ /hi--\d+/
+    it 'numeric slug' do
+      record = SlugGenerationRspecModel.new(name: '123')
+      record.should_receive(:simple_slug_exists?).with('_123').and_return(false)
+      record.save
+      record.slug.should == '_123'
     end
   end
 
   describe '#to_param' do
+    before do
+      SlugGenerationRspecModel.any_instance.stub(:simple_slug_exists?).and_return(false)
+    end
+
     it 'slug if exists' do
       SlugGenerationRspecModel.create(name: 'Hello').to_param.should == 'hello'
     end
@@ -45,8 +65,8 @@ describe SimpleSlug do
       SlugGenerationRspecModel.friendly_find('1')
     end
 
-    it '#find if numeric string' do
-      SlugGenerationRspecModel.should_receive(:find_by).with('slug' => 'title')
+    it 'find by slug' do
+      SlugGenerationRspecModel.should_receive(:find_by!).with('slug' => 'title').and_return(double)
       SlugGenerationRspecModel.friendly_find('title')
     end
   end
