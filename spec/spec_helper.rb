@@ -35,6 +35,10 @@ class RspecActiveModelBase
     true
   end
 
+  def slug_changed?
+    slug.present?
+  end
+
   def destroyed?
     !!@destroyed
   end
