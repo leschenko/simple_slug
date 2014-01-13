@@ -44,8 +44,9 @@ describe 'slug history' do
 
     it 'find from history' do
       record = double('history')
-      record.stub(:sluggable).and_return(double('record'))
+      record.stub(:sluggable_id).and_return(1)
       ::SimpleSlug::HistorySlug.should_receive(:find_by!).with(slug: 'title').and_return(record)
+      SlugHistoryRspecModel.should_receive(:find).with(1).and_return(record)
       SlugHistoryRspecModel.friendly_find('title')
     end
   end

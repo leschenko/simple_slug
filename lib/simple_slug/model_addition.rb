@@ -33,7 +33,7 @@ module SimpleSlug
           find(id_param)
         else
           finder_method = simple_slug_options[:history] ? :find_by : :find_by!
-          send(finder_method, simple_slug_options[:slug_column] => id_param) or ::SimpleSlug::HistorySlug.find_by!(slug: id_param).sluggable
+          send(finder_method, simple_slug_options[:slug_column] => id_param) or find(::SimpleSlug::HistorySlug.find_by!(slug: id_param).sluggable_id)
         end
       end
 
