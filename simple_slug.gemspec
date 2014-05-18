@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = SimpleSlug::VERSION
   spec.authors       = ['Alex Leschenko']
   spec.email         = ['leschenko.al@gmail.com']
-  spec.summary       = %q{Simple slug generator with history.}
-  spec.description   = %q{This is not a "bulldozer. This is just friendly id generator fo ActiveRecord."}
+  spec.summary       = %q{Friendly url generator with history.}
+  spec.description   = %q{Simple friendly url generator for ActiveRecord with history."}
   spec.homepage      = 'https://github.com/leschenko/simple_slug'
   spec.license       = 'MIT'
 
