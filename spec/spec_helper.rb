@@ -16,6 +16,7 @@ class RspecActiveModelBase
   define_model_callbacks :validation, :save, :destroy
 
   attr_accessor :id, :slug, :name, :created_at
+  alias_method :slug_was, :slug
 
   def self.create(attributes, *)
     record = new(attributes)

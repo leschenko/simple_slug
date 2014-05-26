@@ -19,7 +19,7 @@ module SimpleSlug
                   exclusion: {in: SimpleSlug.excludes},
                   format: {without: SimpleSlug.exclude_regexp}
         if simple_slug_options[:history]
-          after_save :simple_slug_create_history_slug
+          after_save :simple_slug_reset_unsaved_slug, :simple_slug_create_history_slug
           after_destroy :simple_slug_cleanup_history
           include InstanceHistoryMethods
         end
@@ -42,11 +42,11 @@ module SimpleSlug
 
     module InstanceMethods
       def to_param
-        send(simple_slug_options[:slug_column]).presence || super
+        simple_slug_stored_slug.presence || super
       end
 
       def should_generate_new_slug?
-        send(simple_slug_options[:slug_column]).blank? || simple_slug_options[:history]
+        simple_slug_get.blank? || simple_slug_options[:history]
       end
 
       def simple_slug_generate(force=false)
@@ -96,16 +96,33 @@ module SimpleSlug
         base_scope = base_scope.where('sluggable_id != ?', id) if persisted?
         base_scope.exists?
       end
+
+      def simple_slug_set(value)
+        send "#{simple_slug_options[:slug_column]}=", value
+      end
+
+      def simple_slug_get
+        send simple_slug_options[:slug_column]
+      end
+
+      def simple_slug_stored_slug
+        send("#{simple_slug_options[:slug_column]}_was")
+      end
     end
 
     module InstanceHistoryMethods
+      def simple_slug_reset_unsaved_slug
+        return true if errors.blank?
+        simple_slug_set simple_slug_stored_slug
+      end
+
       def simple_slug_cleanup_history
         ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, sluggable_id: id).delete_all
       end
 
       def simple_slug_create_history_slug
         return true unless slug_changed?
-        ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, sluggable_id: id, slug: send(simple_slug_options[:slug_column])).first_or_create
+        ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, sluggable_id: id, slug: simple_slug_get).first_or_create
       end
     end
 
