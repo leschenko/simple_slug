@@ -70,6 +70,11 @@ describe SimpleSlug::ModelAddition do
       SlugGenerationRspecModel.friendly_find('1')
     end
 
+    it "#find if numeric string but it's real slug" do
+      SlugGenerationRspecModel.should_receive(:find_by!).with('slug' => '1').and_return(double)
+      SlugGenerationRspecModel.friendly_find('1', true)
+    end
+
     it 'find by slug' do
       SlugGenerationRspecModel.should_receive(:find_by!).with('slug' => 'title').and_return(double)
       SlugGenerationRspecModel.friendly_find('title')
