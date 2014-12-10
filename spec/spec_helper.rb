@@ -6,6 +6,15 @@ require 'simple_slug'
 # just silence warning
 I18n.enforce_available_locales = false
 
+RSpec.configure do |config|
+  config.expect_with :rspec do |c|
+    c.syntax = :should
+  end
+  config.mock_with :rspec do |c|
+    c.syntax = :should
+  end
+end
+
 class RspecActiveModelBase
   include ActiveModel::Model
   include ActiveModel::AttributeMethods
