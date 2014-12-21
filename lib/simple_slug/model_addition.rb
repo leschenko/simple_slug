@@ -62,7 +62,7 @@ module SimpleSlug
 
       def simple_slug_normalize(base)
         normalized = I18n.transliterate(base).parameterize('-').downcase
-        normalized.to_s =~ /\A\d+/ ? "_#{normalized}" : normalized
+        normalized.to_s =~ SimpleSlug::STARTS_WITH_NUMBER_REGEXP ? "_#{normalized}" : normalized
       end
 
       def simple_slug_resolve(slug_value)

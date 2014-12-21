@@ -15,6 +15,8 @@ module SimpleSlug
   mattr_accessor :slug_column
   @@slug_column = 'slug'
 
+  STARTS_WITH_NUMBER_REGEXP =/\A\d+/
+
   def self.setup
     yield self
   end
