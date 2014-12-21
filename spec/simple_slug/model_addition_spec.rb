@@ -7,71 +7,71 @@ end
 describe SimpleSlug::ModelAddition do
   describe 'slug generation' do
     before do
-      SlugGenerationRspecModel.any_instance.stub(:simple_slug_exists?).and_return(false)
+      allow_any_instance_of(SlugGenerationRspecModel). to receive(:simple_slug_exists?).and_return(false)
     end
 
     it 'after save' do
-      SlugGenerationRspecModel.create(name: 'Hello').slug.should == 'hello'
+      expect(SlugGenerationRspecModel.create(name: 'Hello').slug).to eq 'hello'
     end
 
     it 'skip excludes' do
-      SlugGenerationRspecModel.new(name: 'new').should_not be_valid
+      expect(SlugGenerationRspecModel.new(name: 'new')).not_to be_valid
     end
 
     it 'skip integers' do
-      SlugGenerationRspecModel.new(name: '123').should_not be_valid
+      expect(SlugGenerationRspecModel.new(name: '123')).not_to be_valid
     end
 
     it 'skip slug generation' do
-      SlugGenerationRspecModel.any_instance.stub(:should_generate_new_slug?).and_return(false)
-      SlugGenerationRspecModel.create(name: 'Hello').slug.should be_blank
+      allow_any_instance_of(SlugGenerationRspecModel).to receive(:should_generate_new_slug?).and_return(false)
+      expect(SlugGenerationRspecModel.create(name: 'Hello').slug).to be_blank
     end
   end
 
   describe 'resolve conflicts' do
     it 'duplicate slug' do
       record = SlugGenerationRspecModel.new(name: 'Hi')
-      record.should_receive(:simple_slug_exists?).once.ordered.with('hi').and_return(true)
-      record.should_receive(:simple_slug_exists?).once.ordered.with(/hi--\d+/).and_return(false)
+      expect(record).to receive(:simple_slug_exists?).once.ordered.with('hi').and_return(true)
+      expect(record).to receive(:simple_slug_exists?).once.ordered.with(/hi--\d+/).and_return(false)
       record.save
-      record.slug.should start_with('hi--')
+      expect(record.slug).to start_with('hi--')
     end
 
     it 'numeric slug' do
       record = SlugGenerationRspecModel.new(name: '123')
-      record.should_receive(:simple_slug_exists?).with('_123').and_return(false)
+      expect(record).to receive(:simple_slug_exists?).with('_123').and_return(false)
       record.save
-      record.slug.should == '_123'
+      expect(record.slug).to eq '_123'
     end
   end
 
   describe '#to_param' do
     before do
-      SlugGenerationRspecModel.any_instance.stub(:simple_slug_exists?).and_return(false)
+      allow_any_instance_of(SlugGenerationRspecModel).to receive(:simple_slug_exists?).and_return(false)
     end
 
     it 'slug if exists' do
-      SlugGenerationRspecModel.create(name: 'Hello').to_param.should == 'hello'
+      expect(SlugGenerationRspecModel.create(name: 'Hello').to_param).to eq 'hello'
     end
 
     it 'id without slug' do
-      SlugGenerationRspecModel.create(id: 1).to_param.should == '1'
+      expect(SlugGenerationRspecModel.create(id: 1).to_param).to eq '1'
     end
   end
 
   describe '#friendly_find' do
     it '#find if integer like' do
-      SlugGenerationRspecModel.should_receive(:find).with(1)
+      expect(SlugGenerationRspecModel).to receive(:find).with(1)
       SlugGenerationRspecModel.friendly_find(1)
     end
 
     it '#find if numeric string' do
-      SlugGenerationRspecModel.should_receive(:find).with('1')
+      expect(SlugGenerationRspecModel).to receive(:find).with('1')
       SlugGenerationRspecModel.friendly_find('1')
     end
 
     it 'find by slug' do
-      SlugGenerationRspecModel.should_receive(:find_by!).with('slug' => 'title').and_return(double)
+      expect(SlugGenerationRspecModel).to receive(:find_by!).with('slug' => 'title').and_return(double)
       SlugGenerationRspecModel.friendly_find('title')
     end
   end

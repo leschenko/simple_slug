@@ -3,15 +3,15 @@ require 'spec_helper'
 describe SimpleSlug do
   context 'defaults' do
     it 'slug column' do
-      SimpleSlug.slug_column.should == 'slug'
+      expect(SimpleSlug.slug_column).to eq 'slug'
     end
 
     it 'excludes' do
-      SimpleSlug.excludes.should include('new', 'edit')
+      expect(SimpleSlug.excludes).to include('new', 'edit')
     end
 
     it 'exclude regexps' do
-      SimpleSlug.exclude_regexp.should == /\A\d+\z/
+     expect( SimpleSlug.exclude_regexp).to eq /\A\d+\z/
     end
   end
 end
