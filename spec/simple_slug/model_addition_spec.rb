@@ -75,4 +75,28 @@ describe SimpleSlug::ModelAddition do
       SlugGenerationRspecModel.friendly_find('title')
     end
   end
+
+  describe 'max length' do
+    before do
+      allow_any_instance_of(SlugGenerationRspecModel).to receive(:simple_slug_exists?).and_return(false)
+    end
+
+    after do
+      SlugGenerationRspecModel.simple_slug_options.delete(:max_length)
+    end
+
+    it 'cuts slug to max length' do
+      expect(SlugGenerationRspecModel.new(name: 'Hello' * 100).simple_slug_generate.length).to eq 240
+    end
+
+    it 'use max length from per model options' do
+      SlugGenerationRspecModel.simple_slug_options[:max_length] = 100
+      expect(SlugGenerationRspecModel.new(name: 'Hello' * 100).simple_slug_generate.length).to eq 100
+    end
+
+    it 'omit max length' do
+      SimpleSlug.max_length = nil
+      expect(SlugGenerationRspecModel.new(name: 'Hello' * 100).simple_slug_generate.length).to eq 500
+    end
+  end
 end

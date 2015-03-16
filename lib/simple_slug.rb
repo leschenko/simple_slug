@@ -15,6 +15,9 @@ module SimpleSlug
   mattr_accessor :slug_column
   @@slug_column = 'slug'
 
+  mattr_accessor :max_length
+  @@max_length = 240
+
   STARTS_WITH_NUMBER_REGEXP =/\A\d+/
 
   def self.setup

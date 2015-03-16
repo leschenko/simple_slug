@@ -8,7 +8,7 @@ module SimpleSlug
       def simple_slug(*args)
         class_attribute :simple_slug_options, instance_writer: false
         options = args.extract_options!
-        self.simple_slug_options = options.reverse_merge(slug_column: SimpleSlug.slug_column, slug_method: args)
+        self.simple_slug_options = options.reverse_merge(slug_column: SimpleSlug.slug_column, slug_method: args, max_length: SimpleSlug.max_length)
 
         include InstanceMethods
         extend ClassMethods
@@ -51,6 +51,7 @@ module SimpleSlug
 
       def simple_slug_generate(force=false)
         simple_slug = simple_slug_normalize(simple_slug_base)
+        simple_slug = simple_slug.first(simple_slug_options[:max_length]) if simple_slug_options[:max_length]
         return true if !force && simple_slug == send(simple_slug_options[:slug_column]).to_s.sub(/--\d+\z/, '')
         resolved_simple_slug = simple_slug_resolve(simple_slug)
         send "#{simple_slug_options[:slug_column]}=", resolved_simple_slug

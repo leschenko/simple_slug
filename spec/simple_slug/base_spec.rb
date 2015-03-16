@@ -13,5 +13,9 @@ describe SimpleSlug do
     it 'exclude regexps' do
      expect( SimpleSlug.exclude_regexp).to eq /\A\d+\z/
     end
+
+    it 'max length' do
+     expect( SimpleSlug.max_length).to eq 240
+    end
   end
 end
