@@ -4,6 +4,14 @@ class SlugGenerationRspecModel < RspecActiveModelBase
   simple_slug :name
 end
 
+class SlugGenerationRspecModelWithoutValidation < RspecActiveModelBase
+  simple_slug :name, add_validation: false
+end
+
+class SlugGenerationRspecModelWithoutCallback < RspecActiveModelBase
+  simple_slug :name, callback_type: nil
+end
+
 describe SimpleSlug::ModelAddition do
   describe 'slug generation' do
     before do
@@ -97,6 +105,18 @@ describe SimpleSlug::ModelAddition do
     it 'omit max length' do
       SimpleSlug.max_length = nil
       expect(SlugGenerationRspecModel.new(name: 'Hello' * 100).simple_slug_generate.length).to eq 500
+    end
+  end
+
+  describe 'add_validation' do
+    it 'skip validation' do
+      expect(SlugGenerationRspecModelWithoutValidation.validators_on(:slug)).to be_blank
+    end
+  end
+
+  describe 'callback_type' do
+    it 'skip callback' do
+      expect(SlugGenerationRspecModelWithoutCallback.new).not_to receive(:should_generate_new_slug?)
     end
   end
 end

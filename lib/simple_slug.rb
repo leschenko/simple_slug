@@ -18,10 +18,15 @@ module SimpleSlug
   mattr_accessor :max_length
   @@max_length = 240
 
+  mattr_accessor :callback_type
+  @@callback_type = :before_validation
+
+  mattr_accessor :add_validation
+  @@add_validation = true
+
   STARTS_WITH_NUMBER_REGEXP =/\A\d+/
 
   def self.setup
     yield self
   end
-
 end

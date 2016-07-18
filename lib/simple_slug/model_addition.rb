@@ -8,16 +8,26 @@ module SimpleSlug
       def simple_slug(*args)
         class_attribute :simple_slug_options, instance_writer: false
         options = args.extract_options!
-        self.simple_slug_options = options.reverse_merge(slug_column: SimpleSlug.slug_column, slug_method: args, max_length: SimpleSlug.max_length)
+        self.simple_slug_options = options.reverse_merge(
+            slug_column: SimpleSlug.slug_column,
+            slug_method: args,
+            max_length: SimpleSlug.max_length,
+            callback_type: SimpleSlug.callback_type,
+            add_validation: SimpleSlug.add_validation
+        )
 
         include InstanceMethods
         extend ClassMethods
 
-        before_validation :simple_slug_generate, if: :should_generate_new_slug?
-        validates simple_slug_options[:slug_column],
-                  presence: true,
-                  exclusion: {in: SimpleSlug.excludes},
-                  format: {without: SimpleSlug.exclude_regexp}
+        send(simple_slug_options[:callback_type], :simple_slug_generate, if: :should_generate_new_slug?) if simple_slug_options[:callback_type]
+
+        if simple_slug_options[:add_validation]
+          validates simple_slug_options[:slug_column],
+                    presence: true,
+                    exclusion: {in: SimpleSlug.excludes},
+                    format: {without: SimpleSlug.exclude_regexp}
+        end
+
         if simple_slug_options[:history]
           after_save :simple_slug_reset_unsaved_slug, :simple_slug_create_history_slug
           after_destroy :simple_slug_cleanup_history
