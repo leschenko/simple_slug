@@ -5,6 +5,7 @@ require 'simple_slug'
 
 # just silence warning
 I18n.enforce_available_locales = false
+I18n.default_locale = :uk
 
 class RspecActiveModelBase
   include ActiveModel::Model

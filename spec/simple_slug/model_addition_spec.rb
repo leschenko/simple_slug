@@ -12,6 +12,17 @@ class SlugGenerationRspecModelWithoutCallback < RspecActiveModelBase
   simple_slug :name, callback_type: nil
 end
 
+class SlugGenerationRspecModelLocalized < RspecActiveModelBase
+  attr_accessor :slug_en, :name_en
+  alias_method :slug_en_was, :slug_en
+
+  simple_slug :name, locales: [nil, :en]
+
+  def name
+    I18n.locale == :en ? name_en : @name
+  end
+end
+
 describe SimpleSlug::ModelAddition do
   describe 'slug generation' do
     before do
@@ -39,15 +50,15 @@ describe SimpleSlug::ModelAddition do
   describe 'resolve conflicts' do
     it 'duplicate slug' do
       record = SlugGenerationRspecModel.new(name: 'Hi')
-      expect(record).to receive(:simple_slug_exists?).once.ordered.with('hi').and_return(true)
-      expect(record).to receive(:simple_slug_exists?).once.ordered.with(/hi--\d+/).and_return(false)
+      expect(record).to receive(:simple_slug_exists?).once.ordered.with('hi', nil).and_return(true)
+      expect(record).to receive(:simple_slug_exists?).once.ordered.with(/hi--\d+/, nil).and_return(false)
       record.save
       expect(record.slug).to start_with('hi--')
     end
 
     it 'numeric slug' do
       record = SlugGenerationRspecModel.new(name: '123')
-      expect(record).to receive(:simple_slug_exists?).with('_123').and_return(false)
+      expect(record).to receive(:simple_slug_exists?).with('_123', nil).and_return(false)
       record.save
       expect(record.slug).to eq '_123'
     end
@@ -94,17 +105,23 @@ describe SimpleSlug::ModelAddition do
     end
 
     it 'cuts slug to max length' do
-      expect(SlugGenerationRspecModel.new(name: 'Hello' * 100).simple_slug_generate.length).to eq 240
+      record = SlugGenerationRspecModel.new(name: 'Hello' * 100)
+      record.simple_slug_generate
+      expect(record.slug.length).to eq 240
     end
 
     it 'use max length from per model options' do
       SlugGenerationRspecModel.simple_slug_options[:max_length] = 100
-      expect(SlugGenerationRspecModel.new(name: 'Hello' * 100).simple_slug_generate.length).to eq 100
+      record = SlugGenerationRspecModel.new(name: 'Hello' * 100)
+      record.simple_slug_generate
+      expect(record.slug.length).to eq 100
     end
 
     it 'omit max length' do
       SimpleSlug.max_length = nil
-      expect(SlugGenerationRspecModel.new(name: 'Hello' * 100).simple_slug_generate.length).to eq 500
+      record = SlugGenerationRspecModel.new(name: 'Hello' * 100)
+      record.simple_slug_generate
+      expect(record.slug.length).to eq 500
     end
   end
 
@@ -117,6 +134,18 @@ describe SimpleSlug::ModelAddition do
   describe 'callback_type' do
     it 'skip callback' do
       expect(SlugGenerationRspecModelWithoutCallback.new).not_to receive(:should_generate_new_slug?)
+    end
+  end
+
+  describe 'localized' do
+    before do
+      allow_any_instance_of(SlugGenerationRspecModelLocalized).to receive(:simple_slug_exists?).and_return(false)
+    end
+
+    it 'generate slug for locales' do
+      record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+      expect(record.slug).to eq 'hello'
+      expect(record.slug_en).to eq 'hello-en'
     end
   end
 end
