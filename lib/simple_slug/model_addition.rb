@@ -63,13 +63,23 @@ module SimpleSlug
 
       def simple_slug_generate(force=false)
         (simple_slug_options[:locales] || [nil]).each do |locale|
-          I18n.with_locale(locale) do
+          simple_slug_with_locale(locale) do
             simple_slug = simple_slug_normalize(simple_slug_base)
             simple_slug = simple_slug.first(simple_slug_options[:max_length]) if simple_slug_options[:max_length]
             next true if !force && simple_slug == simple_slug_get(locale).to_s.sub(/--\d+\z/, '')
             resolved_simple_slug = simple_slug_resolve(simple_slug, locale)
             simple_slug_set(resolved_simple_slug, locale)
           end
+        end
+      end
+
+      def simple_slug_with_locale(locale)
+        if defined? Globalize
+          Globalize.with_locale(locale) do
+            I18n.with_locale(locale) { yield }
+          end
+        else
+          I18n.with_locale(locale) { yield }
         end
       end
 
@@ -86,7 +96,8 @@ module SimpleSlug
       end
 
       def simple_slug_normalize(base)
-        normalized = I18n.transliterate(base).parameterize(separator: '-').downcase
+        parameterize_args = ActiveSupport::VERSION::MAJOR > 4 ? {separator: '-'} : '-'
+        normalized = I18n.transliterate(base).parameterize(parameterize_args).downcase
         normalized.to_s =~ SimpleSlug::STARTS_WITH_NUMBER_REGEXP ? "_#{normalized}" : normalized
       end
 
