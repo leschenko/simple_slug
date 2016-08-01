@@ -63,13 +63,17 @@ module SimpleSlug
 
       def simple_slug_generate(force=false)
         (simple_slug_options[:locales] || [nil]).each do |locale|
-          simple_slug_with_locale(locale) do
-            simple_slug = simple_slug_normalize(simple_slug_base)
-            simple_slug = simple_slug.first(simple_slug_options[:max_length]) if simple_slug_options[:max_length]
-            next true if !force && simple_slug == simple_slug_get(locale).to_s.sub(/--\d+\z/, '')
-            resolved_simple_slug = simple_slug_resolve(simple_slug, locale)
-            simple_slug_set(resolved_simple_slug, locale)
-          end
+          simple_slug_generate_for_locale(locale, force)
+        end
+      end
+
+      def simple_slug_generate_for_locale(locale=nil, force=false)
+        simple_slug_with_locale(locale) do
+          simple_slug = simple_slug_normalize(simple_slug_base)
+          simple_slug = simple_slug.first(simple_slug_options[:max_length]) if simple_slug_options[:max_length]
+          return if !force && simple_slug == simple_slug_get(locale).to_s.sub(/--\d+\z/, '')
+          resolved_simple_slug = simple_slug_resolve(simple_slug, locale)
+          simple_slug_set(resolved_simple_slug, locale)
         end
       end
 
@@ -96,6 +100,7 @@ module SimpleSlug
       end
 
       def simple_slug_normalize(base)
+        base = SimpleSlug.normalize_cyrillic(base)
         parameterize_args = ActiveSupport::VERSION::MAJOR > 4 ? {separator: '-'} : '-'
         normalized = I18n.transliterate(base).parameterize(parameterize_args).downcase
         normalized.to_s =~ SimpleSlug::STARTS_WITH_NUMBER_REGEXP ? "_#{normalized}" : normalized

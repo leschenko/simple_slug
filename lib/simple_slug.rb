@@ -29,4 +29,8 @@ module SimpleSlug
   def self.setup
     yield self
   end
+
+  def self.normalize_cyrillic(base)
+    base.tr('АаВЕеКкНОоСсТуХх', 'AaBEeKkHOoCcTyXx')
+  end
 end
