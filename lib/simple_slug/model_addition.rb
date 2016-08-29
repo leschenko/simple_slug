@@ -100,7 +100,7 @@ module SimpleSlug
       end
 
       def simple_slug_normalize(base)
-        base = SimpleSlug.normalize_cyrillic(base)
+        base = SimpleSlug.normalize_cyrillic(base) unless SimpleSlug::CYRILLIC_LOCALES.include?(I18n.locale)
         parameterize_args = ActiveSupport::VERSION::MAJOR > 4 ? {separator: '-'} : '-'
         normalized = I18n.transliterate(base).parameterize(parameterize_args).downcase
         normalized.to_s =~ SimpleSlug::STARTS_WITH_NUMBER_REGEXP ? "_#{normalized}" : normalized

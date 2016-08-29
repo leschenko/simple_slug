@@ -25,12 +25,13 @@ module SimpleSlug
   @@add_validation = true
 
   STARTS_WITH_NUMBER_REGEXP =/\A\d+/
+  CYRILLIC_LOCALES = [:uk, :ru, :be].freeze
 
   def self.setup
     yield self
   end
 
   def self.normalize_cyrillic(base)
-    base.tr('АаВЕеіКкМНОорСсТуХх', 'AaBEeiKkMHOopCcTyXx')
+    base.tr('АаВЕеіКкМНОоРрСсТуХх', 'AaBEeiKkMHOoPpCcTyXx')
   end
 end
