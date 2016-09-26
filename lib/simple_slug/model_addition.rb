@@ -87,14 +87,6 @@ module SimpleSlug
         end
       end
 
-      def simple_slug_generate_(force=false, locale=nil)
-        simple_slug = simple_slug_normalize(simple_slug_base)
-        simple_slug = simple_slug.first(simple_slug_options[:max_length]) if simple_slug_options[:max_length]
-        return true if !force && simple_slug == simple_slug_get(locale).to_s.sub(/--\d+\z/, '')
-        resolved_simple_slug = simple_slug_resolve(simple_slug, locale)
-        simple_slug_set(resolved_simple_slug, locale)
-      end
-
       def simple_slug_base
         simple_slug_options[:slug_method].map{|m| send(m).to_s }.reject(&:blank?).join(' ')
       end
