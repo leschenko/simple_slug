@@ -24,6 +24,9 @@ module SimpleSlug
   mattr_accessor :add_validation
   @@add_validation = true
 
+  mattr_accessor :localized
+  @@localized = false
+
   STARTS_WITH_NUMBER_REGEXP =/\A\d+/
   CYRILLIC_LOCALES = [:uk, :ru, :be].freeze
 

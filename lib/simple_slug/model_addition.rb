@@ -13,7 +13,8 @@ module SimpleSlug
             slug_method: args,
             max_length: SimpleSlug.max_length,
             callback_type: SimpleSlug.callback_type,
-            add_validation: SimpleSlug.add_validation
+            add_validation: SimpleSlug.add_validation,
+            localized: SimpleSlug.localized
         )
 
         include InstanceMethods
@@ -43,16 +44,27 @@ module SimpleSlug
           find(id_param)
         else
           finder_method = simple_slug_options[:history] ? :find_by : :find_by!
-          send(finder_method, simple_slug_options[:slug_column] => id_param) or find(::SimpleSlug::HistorySlug.find_by!(slug: id_param).sluggable_id)
+          slug_column = simple_slug_options[:localized] ? simple_slug_localized_slug_column : simple_slug_options[:slug_column]
+          send(finder_method, slug_column => id_param) or find(::SimpleSlug::HistorySlug.find_by!(slug: id_param).sluggable_id)
         end
       end
 
       alias_method :friendly_find, :simple_slug_find
+
+      def simple_slug_localized_slug_column
+        locale = I18n.locale unless I18n.locale == I18n.default_locale
+        simple_slug_column locale
+      end
+
+      def simple_slug_column(locale=nil)
+        [simple_slug_options[:slug_column], locale].compact.join('_')
+      end
     end
 
     module InstanceMethods
       def to_param
-        simple_slug_stored_slug.presence || super
+        slug_locale = I18n.locale if simple_slug_options[:localized] && I18n.locale != I18n.default_locale
+        simple_slug_stored_slug(slug_locale).presence || super
       end
 
       def should_generate_new_slug?
@@ -118,7 +130,7 @@ module SimpleSlug
       end
 
       def simple_slug_base_exists?(slug_value, locale=nil)
-        base_scope = self.class.unscoped.where(simple_slug_column(locale) => slug_value)
+        base_scope = self.class.unscoped.where(self.class.simple_slug_column(locale) => slug_value)
         base_scope = base_scope.where('id != ?', id) if persisted?
         base_scope.exists?
       end
@@ -131,19 +143,19 @@ module SimpleSlug
       end
 
       def simple_slug_set(value, locale=nil)
-        send "#{simple_slug_column(locale)}=", value
+        send "#{self.class.simple_slug_column(locale)}=", value
       end
 
       def simple_slug_get(locale=nil)
-        send simple_slug_column(locale)
+        send self.class.simple_slug_column(locale)
       end
 
       def simple_slug_stored_slug(locale=nil)
-        send("#{simple_slug_column(locale)}_was")
+        send("#{self.class.simple_slug_column(locale)}_was")
       end
 
-      def simple_slug_column(locale=nil)
-        [simple_slug_options[:slug_column], locale].compact.join('_')
+      def simple_slug_localized_slug
+        simple_slug_get self.class.simple_slug_localized_slug_column
       end
     end
 
