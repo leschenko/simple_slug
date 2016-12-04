@@ -1,6 +1,7 @@
 require 'active_record'
 require 'i18n'
 require 'active_support/core_ext'
+require 'byebug'
 require 'simple_slug'
 
 # just silence warning

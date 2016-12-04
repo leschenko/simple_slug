@@ -41,6 +41,14 @@ describe SimpleSlug::ModelAddition do
       expect(SlugGenerationRspecModel.new(name: '123')).not_to be_valid
     end
 
+    it 'skip spaces' do
+      expect(SlugGenerationRspecModel.new(slug: 'test test')).not_to be_valid
+    end
+
+    it 'skip punctuation' do
+      expect(SlugGenerationRspecModel.new(slug: 'test.test')).not_to be_valid
+    end
+
     it 'skip slug generation' do
       allow_any_instance_of(SlugGenerationRspecModel).to receive(:should_generate_new_slug?).and_return(false)
       expect(SlugGenerationRspecModel.create(name: 'Hello').slug).to be_blank

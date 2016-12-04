@@ -11,6 +11,7 @@ module SimpleSlug
         self.simple_slug_options = options.reverse_merge(
             slug_column: SimpleSlug.slug_column,
             slug_method: args,
+            slug_regexp: SimpleSlug.slug_regexp,
             max_length: SimpleSlug.max_length,
             callback_type: SimpleSlug.callback_type,
             add_validation: SimpleSlug.add_validation,
@@ -23,10 +24,12 @@ module SimpleSlug
         send(simple_slug_options[:callback_type], :simple_slug_generate, if: :should_generate_new_slug?) if simple_slug_options[:callback_type]
 
         if simple_slug_options[:add_validation]
-          validates simple_slug_options[:slug_column],
-                    presence: true,
-                    exclusion: {in: SimpleSlug.excludes},
-                    format: {without: SimpleSlug.exclude_regexp}
+          Array(simple_slug_options[:locales] || [nil]).each do |locale|
+            validates simple_slug_column(locale),
+                      presence: true,
+                      exclusion: {in: SimpleSlug.excludes},
+                      format: {with: simple_slug_options[:slug_regexp]}
+          end
         end
 
         if simple_slug_options[:history]
@@ -58,6 +61,11 @@ module SimpleSlug
 
       def simple_slug_column(locale=nil)
         [simple_slug_options[:slug_column], locale].compact.join('_')
+      end
+
+      def simple_slug_columns
+        return [simple_slug_options[:slug_column]] unless simple_slug_options[:locales]
+        simple_slug_options[:locales].map{|locale| simple_slug_column(locale) }
       end
     end
 
