@@ -14,8 +14,7 @@ module SimpleSlug
             slug_regexp: SimpleSlug.slug_regexp,
             max_length: SimpleSlug.max_length,
             callback_type: SimpleSlug.callback_type,
-            add_validation: SimpleSlug.add_validation,
-            localized: SimpleSlug.localized
+            add_validation: SimpleSlug.add_validation
         )
 
         include InstanceMethods
@@ -24,7 +23,7 @@ module SimpleSlug
         send(simple_slug_options[:callback_type], :simple_slug_generate, if: :should_generate_new_slug?) if simple_slug_options[:callback_type]
 
         if simple_slug_options[:add_validation]
-          Array(simple_slug_options[:locales] || [nil]).each do |locale|
+          simple_slug_locales.each do |locale|
             validates simple_slug_column(locale),
                       presence: true,
                       exclusion: {in: SimpleSlug.excludes},
@@ -47,32 +46,37 @@ module SimpleSlug
           find(id_param)
         else
           finder_method = simple_slug_options[:history] ? :find_by : :find_by!
-          slug_column = simple_slug_options[:localized] ? simple_slug_localized_slug_column : simple_slug_options[:slug_column]
-          send(finder_method, slug_column => id_param) or find(::SimpleSlug::HistorySlug.find_by!(slug: id_param).sluggable_id)
+          send(finder_method, simple_slug_column => id_param) or find(::SimpleSlug::HistorySlug.find_by!(slug: id_param).sluggable_id)
         end
       end
 
       alias_method :friendly_find, :simple_slug_find
 
-      def simple_slug_localized_slug_column
-        locale = I18n.locale unless I18n.locale == I18n.default_locale
-        simple_slug_column locale
-      end
-
-      def simple_slug_column(locale=nil)
-        [simple_slug_options[:slug_column], locale].compact.join('_')
+      def simple_slug_column(locale=I18n.locale)
+        if simple_slug_localized?(locale)
+          [simple_slug_options[:slug_column], locale].compact.join('_')
+        else
+          simple_slug_options[:slug_column]
+        end
       end
 
       def simple_slug_columns
-        return [simple_slug_options[:slug_column]] unless simple_slug_options[:locales]
-        simple_slug_options[:locales].map{|locale| simple_slug_column(locale) }
+        simple_slug_locales.map{|locale| simple_slug_column(locale) }
+      end
+
+      def simple_slug_locales
+        Array(simple_slug_options[:locales] || [nil])
+      end
+
+      def simple_slug_localized?(locale=I18n.locale)
+        return unless locale
+        simple_slug_locales.include?(locale.to_sym)
       end
     end
 
     module InstanceMethods
       def to_param
-        slug_locale = I18n.locale if simple_slug_options[:localized] && I18n.locale != I18n.default_locale
-        simple_slug_stored_slug(slug_locale).presence || super
+        simple_slug_stored_slug.presence || super
       end
 
       def should_generate_new_slug?
@@ -87,7 +91,7 @@ module SimpleSlug
         end
       end
 
-      def simple_slug_generate_for_locale(locale=nil, force=false)
+      def simple_slug_generate_for_locale(locale=I18n.locale, force=false)
         simple_slug_with_locale(locale) do
           simple_slug = simple_slug_normalize(simple_slug_base)
           simple_slug = simple_slug.first(simple_slug_options[:max_length]) if simple_slug_options[:max_length]
@@ -118,7 +122,7 @@ module SimpleSlug
         normalized.to_s =~ SimpleSlug::STARTS_WITH_NUMBER_REGEXP ? "_#{normalized}" : normalized
       end
 
-      def simple_slug_resolve(slug_value, locale=nil)
+      def simple_slug_resolve(slug_value, locale=I18n.locale)
         if simple_slug_exists?(slug_value, locale)
           loop do
             slug_value_with_suffix = simple_slug_next(slug_value)
@@ -133,11 +137,11 @@ module SimpleSlug
         "#{slug_value}--#{rand(99999)}"
       end
 
-      def simple_slug_exists?(slug_value, locale=nil)
+      def simple_slug_exists?(slug_value, locale=I18n.locale)
         simple_slug_base_exists?(slug_value, locale) || simple_slug_history_exists?(slug_value)
       end
 
-      def simple_slug_base_exists?(slug_value, locale=nil)
+      def simple_slug_base_exists?(slug_value, locale=I18n.locale)
         base_scope = self.class.unscoped.where(self.class.simple_slug_column(locale) => slug_value)
         base_scope = base_scope.where('id != ?', id) if persisted?
         base_scope.exists?
@@ -150,20 +154,16 @@ module SimpleSlug
         base_scope.exists?
       end
 
-      def simple_slug_set(value, locale=nil)
+      def simple_slug_set(value, locale=I18n.locale)
         send "#{self.class.simple_slug_column(locale)}=", value
       end
 
-      def simple_slug_get(locale=nil)
+      def simple_slug_get(locale=I18n.locale)
         send self.class.simple_slug_column(locale)
       end
 
-      def simple_slug_stored_slug(locale=nil)
+      def simple_slug_stored_slug(locale=I18n.locale)
         send("#{self.class.simple_slug_column(locale)}_was")
-      end
-
-      def simple_slug_localized_slug
-        simple_slug_get self.class.simple_slug_localized_slug_column
       end
     end
 
@@ -182,6 +182,5 @@ module SimpleSlug
         ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, sluggable_id: id, slug: simple_slug_get).first_or_create
       end
     end
-
   end
 end

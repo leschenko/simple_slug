@@ -155,5 +155,33 @@ describe SimpleSlug::ModelAddition do
       expect(record.slug).to eq 'hello'
       expect(record.slug_en).to eq 'hello-en'
     end
+
+    describe '#to_param' do
+      it 'generate not localized for default locale' do
+        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+        expect(record.to_param).to eq 'hello'
+      end
+
+      it 'generate localized' do
+        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+        I18n.with_locale(:en) do
+          expect(record.to_param).to eq 'hello-en'
+        end
+      end
+    end
+
+    describe '#simple_slug_find' do
+      it 'use default slug column with default locale' do
+        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+        expect(SlugGenerationRspecModelLocalized).to receive(:find_by!).with('slug' => 'hello').and_return(record)
+        SlugGenerationRspecModelLocalized.simple_slug_find('hello')
+      end
+
+      it 'use localized slug column' do
+        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+        expect(SlugGenerationRspecModelLocalized).to receive(:find_by!).with('slug_en' => 'hello-en').and_return(record)
+        I18n.with_locale(:en) { SlugGenerationRspecModelLocalized.simple_slug_find('hello-en') }
+      end
+    end
   end
 end
