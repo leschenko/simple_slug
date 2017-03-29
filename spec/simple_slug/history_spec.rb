@@ -12,7 +12,7 @@ describe 'slug history' do
 
     it 'create' do
       relation = double
-      expect(::SimpleSlug::HistorySlug).to receive(:where).once.ordered.with(sluggable_type: 'SlugHistoryRspecModel', sluggable_id: 1, slug: 'hello').and_return(relation)
+      expect(::SimpleSlug::HistorySlug).to receive(:where).once.ordered.with(sluggable_type: 'SlugHistoryRspecModel', slug: 'hello').and_return(relation)
       expect(relation).to receive(:first_or_create)
       SlugHistoryRspecModel.create(id: 1, name: 'Hello')
     end

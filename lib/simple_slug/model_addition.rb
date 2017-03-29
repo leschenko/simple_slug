@@ -179,7 +179,7 @@ module SimpleSlug
 
       def simple_slug_create_history_slug
         return true unless slug_changed?
-        ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, sluggable_id: id, slug: simple_slug_get).first_or_create
+        ::SimpleSlug::HistorySlug.where(sluggable_type: self.class.name, slug: simple_slug_get).first_or_create{|hs| hs.sluggable_id = id }
       end
     end
   end
