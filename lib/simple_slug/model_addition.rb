@@ -40,9 +40,9 @@ module SimpleSlug
     end
 
     module ClassMethods
-      def simple_slug_find(id_param)
+      def simple_slug_find(id_param, force_slug = false)
         return unless id_param
-        if id_param.is_a?(Integer) || id_param =~ /\A\d+\z/
+        if !force_slug && (id_param.is_a?(Integer) || id_param =~ /\A\d+\z/)
           find(id_param)
         else
           finder_method = simple_slug_options[:history] ? :find_by : :find_by!
