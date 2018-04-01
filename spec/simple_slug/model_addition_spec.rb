@@ -156,6 +156,24 @@ describe SimpleSlug::ModelAddition do
       expect(record.slug_en).to eq 'hello-en'
     end
 
+    describe '#should_generate_new_slug?' do
+      it 'keep generated slugs' do
+        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+        record.name = 'bye'
+        record.slug_en = nil
+        record.name_en = 'Bye en'
+        expect{ record.save }.not_to change{ record.slug }
+      end
+
+      it 'generate slug for locales with blank slug' do
+        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+        record.name = 'bye'
+        record.slug_en = nil
+        record.name_en = 'Bye en'
+        expect{ record.save }.to change{ record.slug_en }.to('bye-en')
+      end
+    end
+
     describe '#to_param' do
       it 'generate not localized for default locale' do
         record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
