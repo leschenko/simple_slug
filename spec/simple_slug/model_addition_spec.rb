@@ -12,6 +12,10 @@ class SlugGenerationRspecModelWithoutCallback < RspecActiveModelBase
   simple_slug :name, callback_type: nil
 end
 
+class SlugGenerationRspecModelWithFallbackOnBlank < RspecActiveModelBase
+  simple_slug :name, fallback_on_blank: true
+end
+
 class SlugGenerationRspecModelLocalized < RspecActiveModelBase
   attr_accessor :slug_en, :name_en
   alias_method :slug_en_was, :slug_en
@@ -27,6 +31,7 @@ describe SimpleSlug::ModelAddition do
   describe 'slug generation' do
     before do
       allow_any_instance_of(SlugGenerationRspecModel). to receive(:simple_slug_exists?).and_return(false)
+      allow_any_instance_of(SlugGenerationRspecModelWithFallbackOnBlank). to receive(:simple_slug_exists?).and_return(false)
     end
 
     it 'after save' do
@@ -47,6 +52,13 @@ describe SimpleSlug::ModelAddition do
 
     it 'skip punctuation' do
       expect(SlugGenerationRspecModel.new(slug: 'test.test')).not_to be_valid
+    end
+
+    it 'fallback on blank' do
+      record = SlugGenerationRspecModelWithFallbackOnBlank.new
+      allow(record).to receive(:id).and_return(123)
+      record.save
+      expect(record.slug).to eq '__123'
     end
 
     it 'skip slug generation' do
