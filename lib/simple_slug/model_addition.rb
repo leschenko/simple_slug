@@ -36,10 +36,6 @@ module SimpleSlug
           after_destroy :simple_slug_cleanup_history
           include InstanceHistoryMethods
         end
-
-        if simple_slug_options[:locales]
-          attr_accessor :should_generate_new_slug_for_locales
-        end
       end
     end
 
@@ -86,11 +82,15 @@ module SimpleSlug
       def should_generate_new_slug?
         return true if simple_slug_options[:history]
         if simple_slug_options[:locales]
-          self.should_generate_new_slug_for_locales = simple_slug_options[:locales].find_all {|locale| simple_slug_get(locale).blank?}
           should_generate_new_slug_for_locales.present?
         else
           simple_slug_get.blank?
         end
+      end
+
+      def should_generate_new_slug_for_locales
+        return unless simple_slug_options[:locales]
+        simple_slug_options[:locales].find_all {|locale| simple_slug_get(locale).blank?}
       end
 
       def simple_slug_generate(force=false)
