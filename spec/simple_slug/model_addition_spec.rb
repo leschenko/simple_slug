@@ -55,10 +55,8 @@ describe SimpleSlug::ModelAddition do
     end
 
     it 'fallback on blank' do
-      record = SlugGenerationRspecModelWithFallbackOnBlank.new
-      allow(record).to receive(:id).and_return(123)
-      record.save
-      expect(record.slug).to eq '__123'
+      SlugGenerationRspecModelWithFallbackOnBlank.create({})
+      expect(SlugGenerationRspecModelWithFallbackOnBlank.create({}).slug).to start_with '__'
     end
 
     it 'skip slug generation' do

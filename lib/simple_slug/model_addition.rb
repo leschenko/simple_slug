@@ -104,7 +104,7 @@ module SimpleSlug
         simple_slug_with_locale(locale) do
           simple_slug = simple_slug_normalize(simple_slug_base)
           simple_slug = simple_slug.first(simple_slug_options[:max_length]) if simple_slug_options[:max_length]
-          simple_slug = "__#{id}" if simple_slug.blank? && simple_slug_options[:fallback_on_blank]
+          simple_slug = "__#{id || rand(9999)}" if simple_slug.blank? && simple_slug_options[:fallback_on_blank]
           return if !force && simple_slug == simple_slug_get(locale).to_s.sub(/--\d+\z/, '')
           resolved_simple_slug = simple_slug_resolve(simple_slug, locale)
           simple_slug_set(resolved_simple_slug, locale)
