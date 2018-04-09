@@ -94,7 +94,11 @@ module SimpleSlug
       end
 
       def simple_slug_generate(force=false)
-        locales = simple_slug_options[:locales] ? (should_generate_new_slug_for_locales || simple_slug_options[:locales]) : [nil]
+        locales = if simple_slug_options[:locales]
+                    ((!force && should_generate_new_slug_for_locales) || simple_slug_options[:locales])
+                  else
+                    [nil]
+                  end
         locales.each do |locale|
           simple_slug_generate_for_locale(locale, force)
         end
