@@ -56,7 +56,7 @@ describe SimpleSlug::ModelAddition do
 
     it 'es chars' do
       I18n.with_locale(:es) do
-        expect(SlugGenerationRspecModel.create(name: 'ǼßHello').slug).to eq 'aeshello'
+        expect(SlugGenerationRspecModel.create(name: 'áǼßHello').slug).to eq 'aaeshello'
       end
     end
 

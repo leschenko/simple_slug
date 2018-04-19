@@ -28,6 +28,13 @@ module SimpleSlug
   CYRILLIC_LOCALES = [:uk, :ru, :be].freeze
   ES_LOCALES = [:es].freeze
 
+  ES_NORMALIZE_SINGLE = [
+      'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåçèéêëìíîïñòóôõöøùúûüýÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĴĵĶķĹĺĻļĽľĿŀŁłŃńŅņŇňŉŌōŎŏŐőŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſƒƠơƯưǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǺǻǾǿ',
+      'AAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaceeeeiiiinoooooouuuuyyAaAaAaCcCcCcCcDdDdEeEeEeEeEeGgGgGgGgHhHhIiIiIiIiIiJjKkLlLlLlLlllNnNnNnnOoOoOoRrRrRrSsSsSsSsTtTtTtUuUuUuUuUuUuWwYyYZzZzZzsfOoUuAaIiOoUuUuUuUuUuAaOo'
+  ].freeze
+
+  ES_NORMALIZE_MULTI = [['Æ', 'AE'], ['æ', 'ae'], ['Ĳ', 'IJ'], ['ĳ', 'ij'], ['Œ', 'OE'], ['œ', 'oe'], ['Ǽ', 'AE'], ['ǽ', 'ae']].freeze
+
   def self.setup
     yield self
   end
@@ -48,6 +55,8 @@ module SimpleSlug
   end
 
   def self.normalize_es(base)
-    base.tr('ßŁŉſƒƠơƯưǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǺǻǾǿ', 'slnsfOoUuAaIiOoUuUuUuUuUuAaOo').gsub('Ǽ', 'AE').gsub('ǽ', 'ae')
+    base = base.tr(*ES_NORMALIZE_SINGLE)
+    ES_NORMALIZE_MULTI.each{|d| base.gsub!(*d) }
+    base
   end
 end
