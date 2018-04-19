@@ -54,6 +54,12 @@ describe SimpleSlug::ModelAddition do
       expect(SlugGenerationRspecModel.new(slug: 'test.test')).not_to be_valid
     end
 
+    it 'es chars' do
+      I18n.with_locale(:es) do
+        expect(SlugGenerationRspecModel.create(name: 'ǼßHello').slug).to eq 'aeshello'
+      end
+    end
+
     it 'fallback on blank' do
       SlugGenerationRspecModelWithFallbackOnBlank.create({})
       expect(SlugGenerationRspecModelWithFallbackOnBlank.create({}).slug).to start_with '__'

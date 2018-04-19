@@ -26,12 +26,28 @@ module SimpleSlug
 
   STARTS_WITH_NUMBER_REGEXP =/\A\d+/
   CYRILLIC_LOCALES = [:uk, :ru, :be].freeze
+  ES_LOCALES = [:es].freeze
 
   def self.setup
     yield self
   end
 
+  def self.normalize_i18n_fix(base, locale=I18n.locale)
+    locale_sym = locale.to_sym
+    if CYRILLIC_LOCALES.include?(locale_sym)
+      normalize_cyrillic(base)
+    elsif ES_LOCALES.include?(locale_sym)
+      normalize_es(base)
+    else
+      base
+    end
+  end
+
   def self.normalize_cyrillic(base)
     base.tr('АаВЕеіКкМНОоРрСсТуХх', 'AaBEeiKkMHOoPpCcTyXx')
+  end
+
+  def self.normalize_es(base)
+    base.tr('ßŁŉſƒƠơƯưǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǺǻǾǿ', 'slnsfOoUuAaIiOoUuUuUuUuUuAaOo').gsub('Ǽ', 'AE').gsub('ǽ', 'ae')
   end
 end
