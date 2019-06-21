@@ -4,10 +4,12 @@ require 'simple_slug/model_addition'
 require 'simple_slug/railtie' if Object.const_defined?(:Rails)
 
 module SimpleSlug
+  autoload :Adapter, 'simple_slug/adapter'
+  autoload :ModelAddition, 'simple_slug/model_addition'
   autoload :HistorySlug, 'simple_slug/history_slug'
 
   mattr_accessor :excludes
-  @@excludes = %w(new edit show index session login logout sign_in sign_out users admin stylesheets assets javascripts images)
+  @@excludes = %w(new edit show index session login logout sign_in sign_out users admin stylesheets javascripts images fonts assets)
 
   mattr_accessor :slug_regexp
   @@slug_regexp = /\A(?:\w+[\w\d\-_]*|--\d+)\z/
@@ -15,48 +17,23 @@ module SimpleSlug
   mattr_accessor :slug_column
   @@slug_column = 'slug'
 
+  mattr_accessor :min_length
+  @@min_length = 3
+
   mattr_accessor :max_length
-  @@max_length = 240
+  @@max_length = 191
 
   mattr_accessor :callback_type
   @@callback_type = :before_validation
 
-  mattr_accessor :add_validation
-  @@add_validation = true
+  mattr_accessor :validation
+  @@validation = true
 
   STARTS_WITH_NUMBER_REGEXP =/\A\d+/
-  CYRILLIC_LOCALES = [:uk, :ru, :be].freeze
-  ES_LOCALES = [:es].freeze
-
-  ES_NORMALIZE_SINGLE = [
-      'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåçèéêëìíîïñòóôõöøùúûüýÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĴĵĶķĹĺĻļĽľĿŀŁłŃńŅņŇňŉŌōŎŏŐőŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſƒƠơƯưǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǺǻǾǿ',
-      'AAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaceeeeiiiinoooooouuuuyyAaAaAaCcCcCcCcDdDdEeEeEeEeEeGgGgGgGgHhHhIiIiIiIiIiJjKkLlLlLlLlllNnNnNnnOoOoOoRrRrRrSsSsSsSsTtTtTtUuUuUuUuUuUuWwYyYZzZzZzsfOoUuAaIiOoUuUuUuUuUuAaOo'
-  ].freeze
-
-  ES_NORMALIZE_MULTI = [['Æ', 'AE'], ['æ', 'ae'], ['Ĳ', 'IJ'], ['ĳ', 'ij'], ['Œ', 'OE'], ['œ', 'oe'], ['Ǽ', 'AE'], ['ǽ', 'ae']].freeze
+  NUMBER_REGEXP =/\A\d+\z/
+  RESOLVE_SUFFIX_REGEXP = /--\d+\z/
 
   def self.setup
     yield self
-  end
-
-  def self.normalize_i18n_fix(base, locale=I18n.locale)
-    locale_sym = locale.to_sym
-    if CYRILLIC_LOCALES.include?(locale_sym)
-      normalize_cyrillic(base)
-    elsif ES_LOCALES.include?(locale_sym)
-      normalize_es(base)
-    else
-      base
-    end
-  end
-
-  def self.normalize_cyrillic(base)
-    base.tr('АаВЕеіКкМНОоРрСсТуХх', 'AaBEeiKkMHOoPpCcTyXx')
-  end
-
-  def self.normalize_es(base)
-    base = base.tr(*ES_NORMALIZE_SINGLE)
-    ES_NORMALIZE_MULTI.each{|d| base.gsub!(*d) }
-    base
   end
 end

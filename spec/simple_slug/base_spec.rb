@@ -1,17 +1,17 @@
 require 'spec_helper'
 
 describe SimpleSlug do
-  context 'defaults' do
-    it 'slug column' do
+  describe 'config' do
+    it 'has column name' do
       expect(SimpleSlug.slug_column).to eq 'slug'
     end
 
-    it 'excludes' do
+    it 'has excludes' do
       expect(SimpleSlug.excludes).to include('new', 'edit')
     end
 
-    it 'max length' do
-     expect( SimpleSlug.max_length).to eq 240
+    it 'has max length' do
+     expect( SimpleSlug.max_length).to eq 191
     end
   end
 end

@@ -1,220 +1,192 @@
 require 'spec_helper'
 
-class SlugGenerationRspecModel < RspecActiveModelBase
+class SlugRspecModel < RspecActiveRecordBase
   simple_slug :name
 end
 
-class SlugGenerationRspecModelWithoutValidation < RspecActiveModelBase
-  simple_slug :name, add_validation: false
-end
-
-class SlugGenerationRspecModelWithoutCallback < RspecActiveModelBase
-  simple_slug :name, callback_type: nil
-end
-
-class SlugGenerationRspecModelWithFallbackOnBlank < RspecActiveModelBase
+class SlugWithFallbackOnBlankRspecModel < RspecActiveRecordBase
   simple_slug :name, fallback_on_blank: true
 end
 
-class SlugGenerationRspecModelLocalized < RspecActiveModelBase
-  attr_accessor :slug_en, :name_en
-  alias_method :slug_en_was, :slug_en
+class SlugWithoutMaxLengthRspecModel < RspecActiveRecordBase
+  simple_slug :name, max_length: nil
+end
 
-  simple_slug :name, locales: [nil, :en]
 
-  def name
-    I18n.locale == :en ? name_en : @name
+class SlugWithoutValidationRspecModel < RspecActiveRecordBase
+  simple_slug :name, validation: false
+end
+
+class SlugWithoutCallbackRspecModel < RspecActiveRecordBase
+  simple_slug :name, callback_type: nil
+end
+
+class SlugLocalizedRspecModel < RspecActiveRecordBase
+  simple_slug :name_for_slug, history: true, locales: [nil, :en]
+
+  def name_for_slug
+    [name, (I18n.locale unless I18n.locale == I18n.default_locale)].compact.join(' ')
   end
 end
 
 describe SimpleSlug::ModelAddition do
-  describe 'slug generation' do
-    before do
-      allow_any_instance_of(SlugGenerationRspecModel). to receive(:simple_slug_exists?).and_return(false)
-      allow_any_instance_of(SlugGenerationRspecModelWithFallbackOnBlank). to receive(:simple_slug_exists?).and_return(false)
+  before :each do
+    RspecActiveRecordBase.delete_all
+    SimpleSlug::HistorySlug.delete_all
+  end
+
+  describe 'slug' do
+    it 'generate on save' do
+      expect(SlugRspecModel.create(name: 'Hello').slug).to eq 'hello'
     end
 
-    it 'after save' do
-      expect(SlugGenerationRspecModel.create(name: 'Hello').slug).to eq 'hello'
+    it 'add prefix for numbers' do
+      expect(SlugRspecModel.create(name: '123').slug).to eq '_123'
     end
 
-    it 'skip excludes' do
-      expect(SlugGenerationRspecModel.new(name: 'new')).not_to be_valid
+    it 'reject excludes' do
+      expect(SlugRspecModel.new(name: 'new')).not_to be_valid
     end
 
-    it 'skip integers' do
-      expect(SlugGenerationRspecModel.new(name: '123')).not_to be_valid
+    it 'reject spaces' do
+      expect(SlugRspecModel.new(slug: 'test test')).not_to be_valid
     end
 
-    it 'skip spaces' do
-      expect(SlugGenerationRspecModel.new(slug: 'test test')).not_to be_valid
+    it 'reject punctuation' do
+      expect(SlugRspecModel.new(slug: 'test.test')).not_to be_valid
     end
 
-    it 'skip punctuation' do
-      expect(SlugGenerationRspecModel.new(slug: 'test.test')).not_to be_valid
+    it 'fallback to prefixed id on blank slug source' do
+      expect(SlugWithFallbackOnBlankRspecModel.create({}).slug).to start_with '__'
     end
 
-    it 'es chars' do
-      I18n.with_locale(:es) do
-        expect(SlugGenerationRspecModel.create(name: 'áǼßHello').slug).to eq 'aaeshello'
+    describe '#should_generate_new_slug?' do
+      it 'can omit generation' do
+        allow_any_instance_of(SlugRspecModel).to receive(:should_generate_new_slug?).and_return(false)
+        expect(SlugRspecModel.create(name: 'Hello').slug).to be_blank
       end
-    end
-
-    it 'fallback on blank' do
-      SlugGenerationRspecModelWithFallbackOnBlank.create({})
-      expect(SlugGenerationRspecModelWithFallbackOnBlank.create({}).slug).to start_with '__'
-    end
-
-    it 'skip slug generation' do
-      allow_any_instance_of(SlugGenerationRspecModel).to receive(:should_generate_new_slug?).and_return(false)
-      expect(SlugGenerationRspecModel.create(name: 'Hello').slug).to be_blank
     end
   end
 
-  describe 'resolve conflicts' do
-    it 'duplicate slug' do
-      record = SlugGenerationRspecModel.new(name: 'Hi')
-      expect(record).to receive(:simple_slug_exists?).once.ordered.with('hi', nil).and_return(true)
-      expect(record).to receive(:simple_slug_exists?).once.ordered.with(/hi--\d+/, nil).and_return(false)
-      record.save
-      expect(record.slug).to start_with('hi--')
+  describe 'conflicts' do
+    it 'resolve with suffix' do
+      SlugRspecModel.create(name: 'Hello')
+      record = SlugHistoryRspecModel.create(name: 'Hello')
+      expect(record.slug).to start_with('hello--')
     end
 
-    it 'numeric slug' do
-      record = SlugGenerationRspecModel.new(name: '123')
-      expect(record).to receive(:simple_slug_exists?).with('_123', nil).and_return(false)
-      record.save
-      expect(record.slug).to eq '_123'
+    context 'localized' do
+      it 'resolve with suffix' do
+        SlugLocalizedRspecModel.create(name: 'Hello')
+        record = SlugLocalizedRspecModel.create(name: 'Hello')
+        expect(record.slug).to start_with('hello--')
+        expect(record.slug_en).to start_with('hello-en--')
+      end
     end
   end
 
   describe '#to_param' do
     before do
-      allow_any_instance_of(SlugGenerationRspecModel).to receive(:simple_slug_exists?).and_return(false)
+      allow_any_instance_of(SlugRspecModel).to receive(:simple_slug_exists?).and_return(false)
     end
 
-    it 'slug if exists' do
-      expect(SlugGenerationRspecModel.create(name: 'Hello').to_param).to eq 'hello'
+    it 'use slug if present' do
+      expect(SlugRspecModel.create(name: 'Hello').to_param).to eq 'hello'
     end
 
-    it 'id without slug' do
-      expect(SlugGenerationRspecModel.create(id: 1).to_param).to eq '1'
+    it 'do not use unsaved slug' do
+      expect(SlugRspecModel.new(name: 'Hello').to_param).to be_falsey
+    end
+
+    it 'use id if slug blank' do
+      expect(SlugRspecModel.create(id: 1).to_param).to eq '1'
     end
   end
 
-  describe '#friendly_find' do
-    it '#find if integer like' do
-      expect(SlugGenerationRspecModel).to receive(:find).with(1)
-      SlugGenerationRspecModel.friendly_find(1)
+  describe 'find' do
+    it 'by id on integer like param' do
+      expect(SlugRspecModel).to receive(:find).with('1')
+      SlugRspecModel.friendly_find('1')
     end
 
-    it '#find if numeric string' do
-      expect(SlugGenerationRspecModel).to receive(:find).with('1')
-      SlugGenerationRspecModel.friendly_find('1')
-    end
-
-    it 'find by slug' do
-      expect(SlugGenerationRspecModel).to receive(:find_by!).with('slug' => 'title').and_return(double)
-      SlugGenerationRspecModel.friendly_find('title')
+    it 'by slug' do
+      expect(SlugRspecModel).to receive(:find_by!).with('slug' => 'title').and_return(double)
+      SlugRspecModel.friendly_find('title')
     end
   end
 
   describe 'max length' do
-    before do
-      allow_any_instance_of(SlugGenerationRspecModel).to receive(:simple_slug_exists?).and_return(false)
-    end
-
-    after do
-      SlugGenerationRspecModel.simple_slug_options.delete(:max_length)
-    end
-
     it 'cuts slug to max length' do
-      record = SlugGenerationRspecModel.new(name: 'Hello' * 100)
+      record = SlugRspecModel.new(name: 'Hello' * 100)
       record.simple_slug_generate
-      expect(record.slug.length).to eq 240
+      expect(record.slug.length).to eq 191
     end
 
-    it 'use max length from per model options' do
-      SlugGenerationRspecModel.simple_slug_options[:max_length] = 100
-      record = SlugGenerationRspecModel.new(name: 'Hello' * 100)
-      record.simple_slug_generate
-      expect(record.slug.length).to eq 100
-    end
-
-    it 'omit max length' do
-      SimpleSlug.max_length = nil
-      record = SlugGenerationRspecModel.new(name: 'Hello' * 100)
+    it 'return full slug without max_length option' do
+      record = SlugWithoutMaxLengthRspecModel.new(name: 'Hello' * 100)
       record.simple_slug_generate
       expect(record.slug.length).to eq 500
     end
   end
 
-  describe 'add_validation' do
-    it 'skip validation' do
-      expect(SlugGenerationRspecModelWithoutValidation.validators_on(:slug)).to be_blank
+  describe 'validation' do
+    it 'optionally skip validations' do
+      expect(SlugWithoutValidationRspecModel.validators_on(:slug)).to be_blank
     end
   end
 
-  describe 'callback_type' do
-    it 'skip callback' do
-      expect(SlugGenerationRspecModelWithoutCallback.new).not_to receive(:should_generate_new_slug?)
+  describe 'callbacks' do
+    it 'optionally skip callback' do
+      expect(SlugWithoutCallbackRspecModel.new).not_to receive(:should_generate_new_slug?)
     end
   end
 
   describe 'localized' do
-    before do
-      allow_any_instance_of(SlugGenerationRspecModelLocalized).to receive(:simple_slug_exists?).and_return(false)
-    end
-
     it 'generate slug for locales' do
-      record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+      record = SlugLocalizedRspecModel.create(name: 'Hello')
       expect(record.slug).to eq 'hello'
       expect(record.slug_en).to eq 'hello-en'
     end
 
     describe '#should_generate_new_slug?' do
-      it 'keep generated slugs' do
-        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
-        record.name = 'bye'
-        record.slug_en = nil
-        record.name_en = 'Bye en'
-        expect{ record.save }.not_to change{ record.slug }
+      it 'keep slug when present' do
+        record = SlugLocalizedRspecModel.create(name: 'Hello')
+        expect{ record.update(name: 'Bye') }.not_to change{ record.slug }
       end
 
-      it 'generate slug for locales with blank slug' do
-        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+      it 'generate slug when blank' do
+        record = SlugLocalizedRspecModel.create(name: 'Hello')
         record.name = 'bye'
         record.slug_en = nil
-        record.name_en = 'Bye en'
         expect{ record.save }.to change{ record.slug_en }.to('bye-en')
       end
     end
 
     describe '#to_param' do
-      it 'generate not localized for default locale' do
-        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+      it 'use unlocalized column for default locale' do
+        record = SlugLocalizedRspecModel.create(name: 'Hello')
         expect(record.to_param).to eq 'hello'
       end
 
-      it 'generate localized' do
-        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
+      it 'use localized column for non-default locales' do
+        record = SlugLocalizedRspecModel.create(name: 'Hello')
         I18n.with_locale(:en) do
           expect(record.to_param).to eq 'hello-en'
         end
       end
     end
 
-    describe '#simple_slug_find' do
-      it 'use default slug column with default locale' do
-        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
-        expect(SlugGenerationRspecModelLocalized).to receive(:find_by!).with('slug' => 'hello').and_return(record)
-        SlugGenerationRspecModelLocalized.simple_slug_find('hello')
+    describe 'find' do
+      it 'use default slug column for default locale' do
+        record = SlugLocalizedRspecModel.create(name: 'Hello')
+        expect(SlugLocalizedRspecModel.simple_slug_find('hello')).to eq record
       end
 
-      it 'use localized slug column' do
-        record = SlugGenerationRspecModelLocalized.create(name: 'Hello', name_en: 'Hello en')
-        expect(SlugGenerationRspecModelLocalized).to receive(:find_by!).with('slug_en' => 'hello-en').and_return(record)
-        I18n.with_locale(:en) { SlugGenerationRspecModelLocalized.simple_slug_find('hello-en') }
+      it 'use localized slug column for non-default locale' do
+        record = SlugLocalizedRspecModel.create(name: 'Hello')
+        I18n.with_locale(:en) do
+          expect(SlugLocalizedRspecModel.simple_slug_find('hello-en')).to eq record
+        end
       end
     end
   end
