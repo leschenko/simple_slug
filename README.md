@@ -1,7 +1,6 @@
 # SimpleSlug
 
 [![Build Status](https://travis-ci.org/leschenko/simple_slug.png?branch=master)](https://travis-ci.org/leschenko/simple_slug)
-[![Dependency Status](https://gemnasium.com/leschenko/simple_slug.png)](https://gemnasium.com/leschenko/simple_slug)
 
 Simple friendly url generator for ActiveRecord models with history.
 
@@ -34,6 +33,14 @@ Or with custom slug column and history:
 ```ruby
 class User < ActiveRecord::Base
   simple_slug :full_name, slug_column: 'my_slug_column', history: true
+end
+```
+
+Add localization with `slug_YOUR_LOCALE` like columns:
+
+```ruby
+class User < ActiveRecord::Base
+  simple_slug :full_name, locales: [nil, :it]
 end
 ```
 
