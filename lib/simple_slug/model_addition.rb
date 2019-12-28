@@ -27,7 +27,7 @@ module SimpleSlug
         if simple_slug_options[:validation]
           validates *simple_slug_adapter.column_names,
                     presence: true,
-                    uniqueness: true,
+                    uniqueness: {case_sensitive: true},
                     exclusion: {in: SimpleSlug.excludes},
                     format: {with: simple_slug_options[:slug_regexp]},
                     length: {minimum: simple_slug_options[:min_length], maximum: simple_slug_options[:max_length]}.reject{|_, v| v.blank? }
