@@ -71,9 +71,9 @@ module SimpleSlug
 
     def normalize(base)
       parameterize_args = ActiveSupport::VERSION::MAJOR > 4 ? {separator: '-'} : '-'
-      normalized = I18n.transliterate(base).parameterize(parameterize_args).downcase
+      normalized = I18n.transliterate(base).parameterize(**parameterize_args).downcase
       normalized = "_#{normalized}" if normalized =~ SimpleSlug::STARTS_WITH_NUMBER_REGEXP
-      normalized = normalized.first(options[:max_length]) if options[:max_length]
+      normalized = normalized[0..options[:max_length].pred] if options[:max_length]
       normalized
     end
 
