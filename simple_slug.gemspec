@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Alex Leschenko']
   spec.email         = ['leschenko.al@gmail.com']
   spec.summary       = %q{Friendly url generator with history.}
-  spec.description   = %q{Simple friendly url generator for ActiveRecord with history."}
+  spec.description   = %q{Simple friendly url generator for ActiveRecord with history.}
   spec.homepage      = 'https://github.com/leschenko/simple_slug'
   spec.license       = 'MIT'
 
@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'activerecord', '>= 4.0.0', '< 6.1'
+  spec.add_dependency 'activerecord', '>= 4.0.0', '< 6.2'
   spec.add_dependency 'i18n', '~> 0.7'
 
   spec.add_development_dependency 'bundler'
