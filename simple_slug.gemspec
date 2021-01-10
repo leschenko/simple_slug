@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'activerecord', '>= 4.0.0', '< 6.2'
-  spec.add_dependency 'i18n', '~> 0.7'
+  spec.add_dependency 'i18n', '~> 1.8.7'
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
